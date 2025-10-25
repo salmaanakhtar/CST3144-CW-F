@@ -15,7 +15,9 @@
         </div>
         <div class="nav-buttons">
           <button class="nav-btn lessons-btn" @click="goToLessons">Lessons</button>
-          <button class="nav-btn cart-btn" @click="goToCart">Cart</button>
+          <button class="nav-btn cart-btn" @click="goToCart" v-if="getTotalCartItems() > 0">
+            Cart ({{ getTotalCartItems() }})
+          </button>
         </div>
       </header>
         <div class="main-content">
@@ -25,9 +27,16 @@
             <div class="lesson-details">
               <p><strong>Location:</strong> {{ lesson.location }}</p>
               <p><strong>Price:</strong> ${{ lesson.price }}</p>
-              <p><strong>Available Spaces:</strong> {{ lesson.spaces }}</p>
+              <p><strong>Available Spaces:</strong> {{ getAvailableSpaces(lesson) }}</p>
             </div>
-            <button class="add-to-cart-btn" @click="addToCart(lesson)">Add to Cart</button>
+            <button 
+              class="add-to-cart-btn" 
+              @click="addToCart(lesson)"
+              :disabled="getAvailableSpaces(lesson) === 0"
+              :class="{ 'disabled': getAvailableSpaces(lesson) === 0 }"
+            >
+              {{ getAvailableSpaces(lesson) === 0 ? 'No Spaces Available' : 'Add to Cart' }}
+            </button>
           </div>
         </div>
       </div>
@@ -36,6 +45,7 @@
       createApp({          data() {
           return { 
             appName: 'Learning App',
+            cart: [],
             lessons: [
               {
                 id: 1,
@@ -113,9 +123,35 @@
           goToLessons() {
           },
           goToCart() {
-          },          addToCart(lesson) {
-
-            console.log('Adding to cart:', lesson.subject);
+            console.log('Cart contents:', this.cart);
+          },
+          getTotalCartItems() {
+            // Calculate total quantity of all items in cart
+            return this.cart.reduce((total, item) => total + item.quantity, 0);
+          },
+          getAvailableSpaces(lesson) {
+            const cartItem = this.cart.find(item => item.id === lesson.id);
+            const quantityInCart = cartItem ? cartItem.quantity : 0;
+            return Math.max(0, lesson.spaces - quantityInCart);
+          },
+          addToCart(lesson) {
+            if (this.getAvailableSpaces(lesson) === 0) {
+              alert('No more spaces available for this lesson!');
+              return;
+            }
+            
+            const existingItem = this.cart.find(item => item.id === lesson.id);
+            
+            if (existingItem) {
+              existingItem.quantity += 1;
+            } else {
+              this.cart.push({
+                ...lesson,
+                quantity: 1
+              });
+            }
+            
+            console.log('Cart updated:', this.cart);
           }
         }
       }).mount('#app')

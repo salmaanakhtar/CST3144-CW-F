@@ -2,25 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vue CDN Example</title>
-    <!-- Vue 3 production CDN (UMD) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />   
+     <title>Vue CDN Example</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <style>
-      body { font-family: Arial, Helvetica, sans-serif; text-align:center; margin-top:40px }
-      input { padding:6px 8px; font-size:14px; }
-    </style>
-  </head>
-  <body>
+    <link rel="stylesheet" href="styles.css">
+  </head>  <body>
     <div id="app">
-      <h1>{{ message }}</h1>
-    </div>
-
-    <script>
+      <header class="header">
+        <div class="logo-section">
+          <div class="logo">L</div>
+          <h1 class="app-name">{{ appName }}</h1>
+        </div>
+        <div class="nav-buttons">
+          <button class="nav-btn lessons-btn" @click="goToLessons">Lessons</button>
+          <button class="nav-btn cart-btn" @click="goToCart">Cart</button>
+        </div>
+      </header>
+      
+      <div class="main-content">
+      </div>
+    </div>    <script>
       const { createApp } = Vue
       createApp({
         data() {
-          return { message: 'Hello from Vue!' }
+          return { 
+            appName: 'Learning App'
+          }
+        },
+        methods: {
+          goToLessons() {
+          },
+          goToCart() {
+          }
         }
       }).mount('#app')
     </script>

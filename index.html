@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />   
-     <title>Vue CDN Example</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+     <title>Lessons App</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <link rel="stylesheet" href="styles.css">
   </head>  <body>
     <div id="app">
@@ -14,14 +14,16 @@
           <h1 class="app-name">{{ appName }}</h1>
         </div>
         <div class="nav-buttons">
-          <button class="nav-btn lessons-btn" @click="goToLessons">Lessons</button>
+          <button class="nav-btn lessons-btn" @click="goToLessons" v-if="currentPage !== 'lessons'">Lessons</button>
           <button class="nav-btn cart-btn" @click="goToCart" v-if="getTotalCartItems() > 0">
             Cart ({{ getTotalCartItems() }})
           </button>
         </div>
       </header>
-        <div class="main-content">
-        <h2>Available Lessons</h2>        <div class="lessons-container">
+      
+      <div class="main-content" v-if="currentPage === 'lessons'">
+        <h2>Available Lessons</h2>
+        <div class="lessons-container">
           <div class="lesson-card" v-for="lesson in lessons" :key="lesson.id">
             <h3 class="lesson-subject">{{ lesson.subject }}</h3>
             <div class="lesson-details">
@@ -40,12 +42,138 @@
           </div>
         </div>
       </div>
+      
+      <div class="main-content" v-if="currentPage === 'checkout'">
+        <h2>Checkout</h2>
+        
+        <div class="cart-section">
+          <h3>Your Cart</h3>
+          <div v-if="cart.length === 0" class="empty-cart">
+            <p>Your cart is empty</p>
+          </div>
+          <div v-else class="cart-items">
+            <div class="cart-item" v-for="item in cart" :key="item.id">
+              <div class="cart-item-info">
+                <h4>{{ item.subject }}</h4>
+                <p><strong>Location:</strong> {{ item.location }}</p>
+                <p><strong>Price:</strong> ${{ item.price }} each</p>
+                <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                <p><strong>Subtotal:</strong> ${{ (item.price * item.quantity).toFixed(2) }}</p>
+              </div>
+            </div>
+            <div class="cart-total">
+              <h3>Total: ${{ getCartTotal() }}</h3>
+            </div>
+          </div>
+        </div>
+        
+        <div class="checkout-form-section">
+          <h3>Checkout Information</h3>
+          <form class="checkout-form">
+            <div class="form-group">
+              <label for="firstName">First Name:</label>
+              <input type="text" id="firstName" v-model="checkoutForm.firstName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="lastName">Last Name:</label>
+              <input type="text" id="lastName" v-model="checkoutForm.lastName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input type="email" id="email" v-model="checkoutForm.email" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number:</label>
+              <input type="tel" id="phone" v-model="checkoutForm.phone" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="address">Address:</label>
+              <textarea id="address" v-model="checkoutForm.address" required></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city" v-model="checkoutForm.city" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="country">Country:</label>
+                <select id="country" v-model="checkoutForm.country" required>
+                  <option value="">Select Country</option>
+                  <option value="United States">United States</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Germany">Germany</option>
+                  <option value="France">France</option>
+                  <option value="Italy">Italy</option>
+                  <option value="Spain">Spain</option>
+                  <option value="Netherlands">Netherlands</option>
+                  <option value="Japan">Japan</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="checkoutForm.isGift">
+                <span class="checkmark"></span>
+                This is a gift
+              </label>
+            </div>
+            
+            <div class="form-group" v-if="checkoutForm.isGift">
+              <label for="recipientName">Recipient's Name:</label>
+              <input type="text" id="recipientName" v-model="checkoutForm.recipientName" required>
+            </div>
+            
+            <div class="form-group radio-group">
+              <label class="form-label">Delivery Instructions:</label>
+              <div class="radio-options">
+                <label class="radio-label">
+                  <input type="radio" name="deliveryOption" value="leaveAtDoor" v-model="checkoutForm.deliveryOption">
+                  <span class="radio-mark"></span>
+                  Leave at door
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="deliveryOption" value="ringBell" v-model="checkoutForm.deliveryOption">
+                  <span class="radio-mark"></span>
+                  Ring bell
+                </label>
+              </div>
+            </div>
+            
+            <button type="submit" class="checkout-btn" @click.prevent="processCheckout">
+              Complete Purchase - ${{ getCartTotal() }}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>    <script>
-      const { createApp } = Vue
-      createApp({          data() {
-          return { 
-            appName: 'Learning App',
-            cart: [],
+      new Vue({
+        el: '#app',
+        data: {
+          appName: 'Learning App',
+          currentPage: 'lessons',
+          cart: [],
+          checkoutForm: {
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            address: '',
+            city: '',
+            country: '',
+            isGift: false,
+            recipientName: '',
+            deliveryOption: ''
+          },
             lessons: [
               {
                 id: 1,
@@ -118,15 +246,22 @@
                 spaces: 5
               }
             ]
-          }
-        },methods: {
+        },
+        methods: {
           goToLessons() {
+            this.currentPage = 'lessons';
           },
           goToCart() {
+            this.currentPage = 'checkout';
+          },
+          getCartTotal() {
+            return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
+          },
+          processCheckout() {
+            console.log('Checkout form data:', this.checkoutForm);
             console.log('Cart contents:', this.cart);
           },
           getTotalCartItems() {
-            // Calculate total quantity of all items in cart
             return this.cart.reduce((total, item) => total + item.quantity, 0);
           },
           getAvailableSpaces(lesson) {
@@ -136,7 +271,6 @@
           },
           addToCart(lesson) {
             if (this.getAvailableSpaces(lesson) === 0) {
-              alert('No more spaces available for this lesson!');
               return;
             }
             
@@ -154,7 +288,7 @@
             console.log('Cart updated:', this.cart);
           }
         }
-      }).mount('#app')
+      })
     </script>
   </body>
 </html>

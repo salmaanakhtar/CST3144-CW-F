@@ -83,6 +83,110 @@ input {
   padding: 20px;
 }
 
+.search-sort-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  gap: 20px;
+}
+
+.search-bar {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sort-select {
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.sort-select:focus {
+  border-color: #007bff;
+}
+
+.sort-order-btn {
+  padding: 10px 12px;
+  border: 2px solid #007bff;
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 45px;
+}
+
+.sort-order-btn:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.sort-order-btn.desc {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.sort-order-btn.desc:hover {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 18px;
+}
+
+/* Responsive design for search controls */
+@media (max-width: 768px) {
+  .search-sort-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .search-bar {
+    max-width: 100%;
+  }
+  
+  .sort-controls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .lessons-container {
   display: flex;
   justify-content: center;

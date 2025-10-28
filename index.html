@@ -23,8 +23,38 @@
       
       <div class="main-content" v-if="currentPage === 'lessons'">
         <h2>Available Lessons</h2>
+        
+        <div class="search-sort-container">
+          <div class="search-bar">
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              placeholder="Search lessons by subject..."
+              class="search-input"
+            >
+          </div>
+          
+          <div class="sort-controls">
+            <select v-model="sortBy" class="sort-select">
+              <option value="">Sort by...</option>
+              <option value="subject">Subject</option>
+              <option value="location">Location</option>
+              <option value="price">Price</option>
+            </select>
+            
+            <button 
+              @click="toggleSortOrder" 
+              class="sort-order-btn"
+              v-if="sortBy"
+              :class="{ 'desc': sortOrder === 'desc' }"
+            >
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </button>
+          </div>
+        </div>
+        
         <div class="lessons-container">
-          <div class="lesson-card" v-for="lesson in lessons" :key="lesson.id">
+          <div class="lesson-card" v-for="lesson in filteredAndSortedLessons" :key="lesson.id">
             <h3 class="lesson-subject">{{ lesson.subject }}</h3>
             <div class="lesson-details">
               <p><strong>Location:</strong> {{ lesson.location }}</p>
@@ -40,6 +70,10 @@
               {{ getAvailableSpaces(lesson) === 0 ? 'No Spaces Available' : 'Add to Cart' }}
             </button>
           </div>
+        </div>
+        
+        <div v-if="filteredAndSortedLessons.length === 0" class="no-results">
+          <p>No lessons found matching your search criteria.</p>
         </div>
       </div>
       
@@ -162,6 +196,9 @@
           appName: 'Learning App',
           currentPage: 'lessons',
           cart: [],
+          searchQuery: '',
+          sortBy: '',
+          sortOrder: 'asc',
           checkoutForm: {
             firstName: '',
             lastName: '',
@@ -247,7 +284,42 @@
               }
             ]
         },
+        computed: {
+          filteredAndSortedLessons() {
+            let filtered = this.lessons;
+            
+            if (this.searchQuery) {
+              const query = this.searchQuery.toLowerCase();
+              filtered = filtered.filter(lesson => 
+                lesson.subject.toLowerCase().includes(query)
+              );
+            }
+            
+            if (this.sortBy) {
+              filtered = [...filtered].sort((a, b) => {
+                let valueA = a[this.sortBy];
+                let valueB = b[this.sortBy];
+                
+                if (typeof valueA === 'string') {
+                  valueA = valueA.toLowerCase();
+                  valueB = valueB.toLowerCase();
+                }
+                
+                if (this.sortOrder === 'asc') {
+                  return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                } else {
+                  return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+                }
+              });
+            }
+            
+            return filtered;
+          }
+        },
         methods: {
+          toggleSortOrder() {
+            this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+          },
           goToLessons() {
             this.currentPage = 'lessons';
           },

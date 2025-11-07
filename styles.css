@@ -294,10 +294,17 @@ input {
   padding: 15px;
   margin-bottom: 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .cart-item:last-child {
   margin-bottom: 0;
+}
+
+.cart-item-info {
+  flex: 1;
 }
 
 .cart-item-info h4 {
@@ -308,6 +315,52 @@ input {
 .cart-item-info p {
   margin: 5px 0;
   color: #555;
+}
+
+.cart-item-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.remove-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #c82333;
+}
+
+.decrease-btn, .increase-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  min-width: 35px;
+}
+
+.decrease-btn:hover, .increase-btn:hover {
+  background-color: #0056b3;
+}
+
+.increase-btn {
+  background-color: #28a745;
+}
+
+.increase-btn:hover {
+  background-color: #218838;
 }
 
 .cart-total {
@@ -372,6 +425,28 @@ input {
   border-radius: 5px;
   font-size: 14px;
   box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input.error,
+.form-group textarea.error,
+.form-group select.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}
+
+.form-group input.valid,
+.form-group textarea.valid,
+.form-group select.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
 }
 
 .form-group select {
@@ -390,6 +465,13 @@ input {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus,
+.form-group select.error:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
 }
 
 .checkbox-group {
@@ -465,6 +547,18 @@ input {
   transition: background-color 0.3s ease;
 }
 
-.checkout-btn:hover {
+.checkout-btn:hover:not(:disabled) {
   background-color: #218838;
+}
+
+.checkout-btn.disabled,
+.checkout-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkout-btn.disabled:hover,
+.checkout-btn:disabled:hover {
+  background-color: #6c757d;
 }

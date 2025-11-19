@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lessons App</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div id="app">
@@ -15,654 +15,284 @@
           <h1 class="app-name">{{ appName }}</h1>
         </div>
         <div class="nav-buttons">
-          <button
-            class="nav-btn lessons-btn"
-            @click="goToLessons"
-            v-if="currentPage !== 'lessons'">
-            Lessons
-          </button>
-          <button
-            class="nav-btn cart-btn"
-            @click="goToCart"
-            v-if="getTotalCartItems() > 0">
-            Cart ({{ getTotalCartItems() }})
-          </button>
+          <button class="nav-btn lessons-btn" @click="goToLessons">Lessons</button>
+          <button class="nav-btn cart-btn" @click="goToCart">Checkout ({{ getTotalCartItems() }})</button>
         </div>
       </header>
 
-      <div class="main-content" v-if="currentPage === 'lessons'">
-        <h2>Available Lessons</h2>
-
-        <div class="search-sort-container">
-          <div class="search-bar">
-            <input
-              type="text"
-              v-model="searchQuery"
-              placeholder="Search lessons by subject, location..."
-              class="search-input" />
-          </div>
-
-          <div class="sort-controls">
-            <select v-model="sortBy" class="sort-select">
-              <option value="">Sort by...</option>
-              <option value="subject">Subject</option>
-              <option value="location">Location</option>
-              <option value="price">Price</option>
-              <option value="spaces">Available Spaces</option>
-            </select>
-
-            <button
-              @click="toggleSortOrder"
-              class="sort-order-btn"
-              v-if="sortBy"
-              :class="{ 'desc': sortOrder === 'desc' }">
-              {{ sortOrder === 'asc' ? '↑' : '↓' }}
-            </button>
-          </div>
+      <main v-if="currentPage === 'lessons'">
+        <div class="controls">
+          <input v-model="searchQuery" placeholder="Search lessons..." />
+          <select v-model="sortBy">
+            <option value="">Sort by</option>
+            <option value="subject">Subject</option>
+            <option value="location">Location</option>
+            <option value="spaces">Available Spaces</option>
+          </select>
+          <button @click="toggleSortOrder">Toggle Order ({{ sortOrder }})</button>
         </div>
 
         <div class="lessons-container">
-          <div
-            class="lesson-card"
-            v-for="lesson in filteredAndSortedLessons"
-            :key="lesson.id">
+          <div v-for="lesson in filteredAndSortedLessons" :key="lesson._id || lesson.id" class="lesson-card">
             <h3 class="lesson-subject">{{ lesson.subject }}</h3>
             <div class="lesson-details">
               <p><strong>Location:</strong> {{ lesson.location }}</p>
-              <p><strong>Price:</strong> ${{ lesson.price }}</p>
-              <p>
-                <strong>Available Spaces:</strong> {{ getAvailableSpaces(lesson)
-                }}
-              </p>
+              <p><strong>Price:</strong> £{{ lesson.price }}</p>
+              <p><strong>Spaces:</strong> {{ lesson.spaces }}</p>
+              <p><strong>Available:</strong> {{ getAvailableSpaces(lesson) }}</p>
             </div>
-            <button
-              class="add-to-cart-btn"
-              @click="addToCart(lesson)"
-              :disabled="getAvailableSpaces(lesson) === 0"
-              :class="{ 'disabled': getAvailableSpaces(lesson) === 0 }">
-              {{ getAvailableSpaces(lesson) === 0 ? 'No Spaces Available' : 'Add
-              to Cart' }}
-            </button>
+            <button class="add-to-cart-btn" @click="addToCart(lesson)" :disabled="getAvailableSpaces(lesson) === 0">Add to cart</button>
           </div>
         </div>
+      </main>
 
-        <div v-if="filteredAndSortedLessons.length === 0" class="no-results">
-          <p>No lessons found matching your search criteria.</p>
-        </div>
-      </div>
-
-      <div class="main-content" v-if="currentPage === 'checkout'">
-        <h2>Checkout</h2>
-
+      <section v-if="currentPage === 'checkout'">
         <div class="cart-section">
-          <h3>Your Cart</h3>
-          <div v-if="cart.length === 0" class="empty-cart">
-            <p>Your cart is empty</p>
-          </div>
-          <div v-else class="cart-items">
-            <div class="cart-item" v-for="item in cart" :key="item.id">
+          <h3>Cart</h3>
+          <div v-if="cart.length === 0" class="empty-cart">Your cart is empty.</div>
+          <div class="cart-items" v-else>
+            <div v-for="item in cart" :key="item.id" class="cart-item">
               <div class="cart-item-info">
                 <h4>{{ item.subject }}</h4>
-                <p><strong>Location:</strong> {{ item.location }}</p>
-                <p><strong>Price:</strong> ${{ item.price }} each</p>
-                <p><strong>Quantity:</strong> {{ item.quantity }}</p>
-                <p>
-                  <strong>Subtotal:</strong> ${{ (item.price *
-                  item.quantity).toFixed(2) }}
-                </p>
+                <p>£{{ item.price }} x {{ item.quantity }}</p>
               </div>
               <div class="cart-item-actions">
-                <button @click="removeFromCart(item.id)" class="remove-btn">
-                  Remove
-                </button>
-                <button
-                  @click="decreaseQuantity(item.id)"
-                  class="decrease-btn"
-                  v-if="item.quantity > 1">
-                  -
-                </button>
-                <button
-                  @click="increaseQuantity(item)"
-                  class="increase-btn"
-                  v-if="getAvailableSpaces(item) > 0">
-                  +
-                </button>
+                <button class="decrease-btn" @click="decreaseQuantity(item.id)">-</button>
+                <button class="increase-btn" @click="increaseQuantityByItem(item)">+</button>
+                <button class="remove-btn" @click="removeFromCart(item.id)">Remove</button>
               </div>
             </div>
             <div class="cart-total">
-              <h3>Total: ${{ getCartTotal() }}</h3>
+              <h3>Total: £{{ getCartTotal() }}</h3>
             </div>
           </div>
         </div>
 
         <div class="checkout-form-section">
-          <h3>Checkout Information</h3>
-          <form class="checkout-form">
-            <div class="form-group">
-              <label for="firstName">First Name:</label>
-              <input
-                type="text"
-                id="firstName"
-                v-model="checkoutForm.firstName"
-                @blur="validateField('firstName')"
-                :class="{ 'error': validationErrors.firstName, 'valid': checkoutForm.firstName && !validationErrors.firstName }"
-                required />
-              <div v-if="validationErrors.firstName" class="error-message">
-                {{ validationErrors.firstName }}
+          <h3>Checkout</h3>
+          <form class="checkout-form" @submit.prevent="processCheckout">
+            <div class="form-row">
+              <div class="form-group">
+                <label>First name</label>
+                <input v-model="checkoutForm.firstName" @blur="validateField('firstName')" :class="{error: validationErrors.firstName, valid: checkoutForm.firstName && !validationErrors.firstName}" />
+                <div class="error-message" v-if="validationErrors.firstName">{{ validationErrors.firstName }}</div>
+              </div>
+              <div class="form-group">
+                <label>Last name</label>
+                <input v-model="checkoutForm.lastName" @blur="validateField('lastName')" :class="{error: validationErrors.lastName, valid: checkoutForm.lastName && !validationErrors.lastName}" />
+                <div class="error-message" v-if="validationErrors.lastName">{{ validationErrors.lastName }}</div>
               </div>
             </div>
 
             <div class="form-group">
-              <label for="lastName">Last Name:</label>
-              <input
-                type="text"
-                id="lastName"
-                v-model="checkoutForm.lastName"
-                @blur="validateField('lastName')"
-                :class="{ 'error': validationErrors.lastName, 'valid': checkoutForm.lastName && !validationErrors.lastName }"
-                required />
-              <div v-if="validationErrors.lastName" class="error-message">
-                {{ validationErrors.lastName }}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email:</label>
-              <input
-                type="email"
-                id="email"
-                v-model="checkoutForm.email"
-                @blur="validateField('email')"
-                :class="{ 'error': validationErrors.email, 'valid': checkoutForm.email && !validationErrors.email }"
-                required />
-              <div v-if="validationErrors.email" class="error-message">
-                {{ validationErrors.email }}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number:</label>
-              <input
-                type="tel"
-                id="phone"
-                v-model="checkoutForm.phone"
-                @blur="validateField('phone')"
-                :class="{ 'error': validationErrors.phone, 'valid': checkoutForm.phone && !validationErrors.phone }"
-                placeholder="(123) 456-7890"
-                required />
-              <div v-if="validationErrors.phone" class="error-message">
-                {{ validationErrors.phone }}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="address">Address:</label>
-              <textarea
-                id="address"
-                v-model="checkoutForm.address"
-                @blur="validateField('address')"
-                :class="{ 'error': validationErrors.address, 'valid': checkoutForm.address && !validationErrors.address }"
-                required></textarea>
-              <div v-if="validationErrors.address" class="error-message">
-                {{ validationErrors.address }}
-              </div>
+              <label>Email</label>
+              <input v-model="checkoutForm.email" @blur="validateField('email')" :class="{error: validationErrors.email, valid: checkoutForm.email && !validationErrors.email}" />
+              <div class="error-message" v-if="validationErrors.email">{{ validationErrors.email }}</div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="city">City:</label>
-                <input
-                  type="text"
-                  id="city"
-                  v-model="checkoutForm.city"
-                  @blur="validateField('city')"
-                  :class="{ 'error': validationErrors.city, 'valid': checkoutForm.city && !validationErrors.city }"
-                  required />
-                <div v-if="validationErrors.city" class="error-message">
-                  {{ validationErrors.city }}
-                </div>
+                <label>Phone</label>
+                <input v-model="checkoutForm.phone" @blur="validateField('phone')" :class="{error: validationErrors.phone, valid: checkoutForm.phone && !validationErrors.phone}" />
+                <div class="error-message" v-if="validationErrors.phone">{{ validationErrors.phone }}</div>
               </div>
-
               <div class="form-group">
-                <label for="country">Country:</label>
-                <select 
-                  id="country" 
-                  v-model="checkoutForm.country"
-                  @change="validateField('country')"
-                  :class="{ 'error': validationErrors.country, 'valid': checkoutForm.country && !validationErrors.country }"
-                  required>
-                  <option value="">Select Country</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Germany">Germany</option>
-                  <option value="France">France</option>
-                  <option value="Italy">Italy</option>
-                  <option value="Spain">Spain</option>
-                  <option value="Netherlands">Netherlands</option>
-                  <option value="Japan">Japan</option>
-                  <option value="Other">Other</option>
-                </select>
-                <div v-if="validationErrors.country" class="error-message">
-                  {{ validationErrors.country }}
-                </div>
+                <label>City</label>
+                <input v-model="checkoutForm.city" @blur="validateField('city')" :class="{error: validationErrors.city, valid: checkoutForm.city && !validationErrors.city}" />
+                <div class="error-message" v-if="validationErrors.city">{{ validationErrors.city }}</div>
               </div>
             </div>
 
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="checkoutForm.isGift" />
-                <span class="checkmark"></span>
-                This is a gift
-              </label>
+            <div class="form-group">
+              <label>Address</label>
+              <input v-model="checkoutForm.address" @blur="validateField('address')" :class="{error: validationErrors.address, valid: checkoutForm.address && !validationErrors.address}" />
+              <div class="error-message" v-if="validationErrors.address">{{ validationErrors.address }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>Country</label>
+              <select v-model="checkoutForm.country" @change="validateField('country')">
+                <option value="">Select country</option>
+                <option>United Kingdom</option>
+                <option>United States</option>
+                <option>Canada</option>
+              </select>
+              <div class="error-message" v-if="validationErrors.country">{{ validationErrors.country }}</div>
+            </div>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" v-model="checkoutForm.isGift" /> This is a gift</label>
             </div>
 
             <div class="form-group" v-if="checkoutForm.isGift">
-              <label for="recipientName">Recipient's Name:</label>
-              <input
-                type="text"
-                id="recipientName"
-                v-model="checkoutForm.recipientName"
-                @blur="validateField('recipientName')"
-                :class="{ 'error': validationErrors.recipientName, 'valid': checkoutForm.recipientName && !validationErrors.recipientName }"
-                required />
-              <div v-if="validationErrors.recipientName" class="error-message">
-                {{ validationErrors.recipientName }}
-              </div>
+              <label>Recipient name</label>
+              <input v-model="checkoutForm.recipientName" @blur="validateField('recipientName')" />
+              <div class="error-message" v-if="validationErrors.recipientName">{{ validationErrors.recipientName }}</div>
             </div>
 
-            <div class="form-group radio-group">
-              <label class="form-label">Delivery Instructions:</label>
+            <div class="radio-group">
+              <div class="form-label">Delivery</div>
               <div class="radio-options">
-                <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="deliveryOption"
-                    value="leaveAtDoor"
-                    v-model="checkoutForm.deliveryOption"
-                    @change="validateField('deliveryOption')" />
-                  <span class="radio-mark"></span>
-                  Leave at door
-                </label>
-                <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="deliveryOption"
-                    value="ringBell"
-                    v-model="checkoutForm.deliveryOption"
-                    @change="validateField('deliveryOption')" />
-                  <span class="radio-mark"></span>
-                  Ring bell
-                </label>
+                <label class="radio-label"><input type="radio" value="leaveAtDoor" v-model="checkoutForm.deliveryOption" @change="validateField('deliveryOption')" /> Leave at door</label>
+                <label class="radio-label"><input type="radio" value="ringBell" v-model="checkoutForm.deliveryOption" @change="validateField('deliveryOption')" /> Ring bell</label>
               </div>
-              <div v-if="validationErrors.deliveryOption" class="error-message">
-                {{ validationErrors.deliveryOption }}
-              </div>
+              <div class="error-message" v-if="validationErrors.deliveryOption">{{ validationErrors.deliveryOption }}</div>
             </div>
 
-            <button
-              type="submit"
-              class="checkout-btn"
-              :class="{ 'disabled': !isFormValid }"
-              :disabled="!isFormValid"
-              @click.prevent="processCheckout">
-              Complete Purchase - ${{ getCartTotal() }}
-            </button>
+            <button class="checkout-btn" type="submit" :disabled="!isFormValid">Complete Purchase - £{{ getCartTotal() }}</button>
           </form>
         </div>
-      </div>
+      </section>
     </div>
+
     <script>
+      // If the page is opened via file://, relative paths like '/lessons' resolve to file:///
+      // so use the full backend origin. Adjust if your backend runs on a different host/port.
+      const API_BASE = (location.protocol === 'file:') ? 'http://localhost:3000' : '';
+
       new Vue({
-        el: "#app",
-        data: {
-          appName: "Learning App",
-          currentPage: "lessons",
-          cart: [],
-          searchQuery: "",
-          sortBy: "",
-          sortOrder: "asc",
-          checkoutForm: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            address: "",
-            city: "",
-            country: "",
-            isGift: false,
-            recipientName: "",
-            deliveryOption: "",
-          },
-          validationErrors: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            address: "",
-            city: "",
-            country: "",
-            recipientName: "",
-            deliveryOption: "",
-          },
-          lessons: [
-            {
-              id: 1,
-              subject: "Mathematics",
-              location: "New York",
-              price: 25,
-              spaces: 5,
+        el: '#app',
+        data() {
+          return {
+            appName: 'Learning App',
+            currentPage: 'lessons',
+            lessons: [],
+            cart: [],
+            searchQuery: '',
+            sortBy: '',
+            sortOrder: 'asc',
+            checkoutForm: {
+              firstName: '', lastName: '', email: '', phone: '', address: '', city: '', country: '', isGift: false, recipientName: '', deliveryOption: ''
             },
-            {
-              id: 2,
-              subject: "Physics",
-              location: "Los Angeles",
-              price: 30,
-              spaces: 8,
-            },
-            {
-              id: 3,
-              subject: "Chemistry",
-              location: "Chicago",
-              price: 28,
-              spaces: 6,
-            },
-            {
-              id: 4,
-              subject: "Biology",
-              location: "Houston",
-              price: 27,
-              spaces: 7,
-            },
-            {
-              id: 5,
-              subject: "English",
-              location: "Philadelphia",
-              price: 22,
-              spaces: 10,
-            },
-            {
-              id: 6,
-              subject: "History",
-              location: "Phoenix",
-              price: 20,
-              spaces: 12,
-            },
-            {
-              id: 7,
-              subject: "Computer Science",
-              location: "San Antonio",
-              price: 35,
-              spaces: 4,
-            },
-            {
-              id: 8,
-              subject: "Art",
-              location: "San Diego",
-              price: 24,
-              spaces: 9,
-            },
-            {
-              id: 9,
-              subject: "Music",
-              location: "Dallas",
-              price: 26,
-              spaces: 6,
-            },
-            {
-              id: 10,
-              subject: "Psychology",
-              location: "San Jose",
-              price: 29,
-              spaces: 5,
-            },
-          ],
+            validationErrors: {},
+          };
         },
         computed: {
           filteredAndSortedLessons() {
-            let filtered = this.lessons;
-
+            let filtered = this.lessons.slice();
             if (this.searchQuery) {
-              const query = this.searchQuery.toLowerCase();
-              filtered = filtered.filter(
-                (lesson) =>
-                  lesson.subject.toLowerCase().includes(query) ||
-                  lesson.location.toLowerCase().includes(query)
-              );
+              const q = this.searchQuery.toLowerCase();
+              filtered = filtered.filter(l => (l.subject || '').toLowerCase().includes(q) || (l.location || '').toLowerCase().includes(q));
             }
-
             if (this.sortBy) {
-              filtered = [...filtered].sort((a, b) => {
-                let valueA, valueB;
-
-                if (this.sortBy === "spaces") {
-                  valueA = this.getAvailableSpaces(a);
-                  valueB = this.getAvailableSpaces(b);
-                } else {
-                  valueA = a[this.sortBy];
-                  valueB = b[this.sortBy];
-
-                  if (typeof valueA === "string") {
-                    valueA = valueA.toLowerCase();
-                    valueB = valueB.toLowerCase();
-                  }
-                }
-
-                if (this.sortOrder === "asc") {
-                  return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
-                } else {
-                  return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
-                }
+              filtered.sort((a, b) => {
+                let va = this.sortBy === 'spaces' ? this.getAvailableSpaces(a) : (a[this.sortBy] || '').toString().toLowerCase();
+                let vb = this.sortBy === 'spaces' ? this.getAvailableSpaces(b) : (b[this.sortBy] || '').toString().toLowerCase();
+                if (this.sortOrder === 'asc') return va < vb ? -1 : va > vb ? 1 : 0;
+                return va > vb ? -1 : va < vb ? 1 : 0;
               });
             }
-
             return filtered;
           },
           isFormValid() {
-            const form = this.checkoutForm;
-            
-            if (!form.firstName.trim() || !form.lastName.trim() || 
-                !form.email.trim() || !form.phone.trim() || 
-                !form.address.trim() || !form.city.trim() || 
-                !form.country || !form.deliveryOption) {
-              return false;
-            }
-            
-            if (form.isGift && !form.recipientName.trim()) {
-              return false;
-            }
-            
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(form.email)) {
-              return false;
-            }
-            
-            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,15}$/;
-            if (!phoneRegex.test(form.phone.replace(/\s/g, ''))) {
-              return false;
-            }
-            
-            const nameRegex = /^[A-Za-z\s\-\']+$/;
-            if (!nameRegex.test(form.firstName) || !nameRegex.test(form.lastName)) {
-              return false;
-            }
-            
-            if (!nameRegex.test(form.city)) {
-              return false;
-            }
-            
-            if (form.isGift && !nameRegex.test(form.recipientName)) {
-              return false;
-            }
-            
+            const f = this.checkoutForm;
+            if (!f.firstName.trim() || !f.lastName.trim() || !f.email.trim() || !f.phone.trim() || !f.address.trim() || !f.city.trim() || !f.country || !f.deliveryOption) return false;
+            if (f.isGift && !f.recipientName.trim()) return false;
+            const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; if (!emailRe.test(f.email)) return false;
+            const phoneRe = /^[\+]?[0-9\s\-\(\)]{10,15}$/; if (!phoneRe.test(f.phone.replace(/\s/g, ''))) return false;
+            const nameRe = /^[A-Za-z\s\-']+$/; if (!nameRe.test(f.firstName) || !nameRe.test(f.lastName) || !nameRe.test(f.city)) return false;
+            if (f.isGift && !nameRe.test(f.recipientName)) return false;
             return true;
-          },
+          }
+        },
+        mounted() {
+          this.fetchLessons();
         },
         methods: {
-          toggleSortOrder() {
-            this.sortOrder = this.sortOrder === "asc" ? "desc" : "asc";
-          },
-          validateField(fieldName) {
-            const form = this.checkoutForm;
-            const value = form[fieldName];
-            
-            this.validationErrors[fieldName] = '';
-            
-            switch(fieldName) {
-              case 'firstName':
-              case 'lastName':
-                if (!value.trim()) {
-                  this.validationErrors[fieldName] = `${fieldName === 'firstName' ? 'First' : 'Last'} name is required`;
-                } else if (value.length < 2) {
-                  this.validationErrors[fieldName] = 'Name must be at least 2 characters';
-                } else if (!/^[A-Za-z\s\-\']+$/.test(value)) {
-                  this.validationErrors[fieldName] = 'Name can only contain letters, spaces, hyphens, and apostrophes';
-                }
-                break;
-                
-              case 'email':
-                if (!value.trim()) {
-                  this.validationErrors[fieldName] = 'Email is required';
-                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                  this.validationErrors[fieldName] = 'Please enter a valid email address';
-                }
-                break;
-                
-              case 'phone':
-                if (!value.trim()) {
-                  this.validationErrors[fieldName] = 'Phone number is required';
-                } else if (!/^[\+]?[0-9\s\-\(\)]{10,15}$/.test(value.replace(/\s/g, ''))) {
-                  this.validationErrors[fieldName] = 'Please enter a valid phone number (10-15 digits)';
-                }
-                break;
-                
-              case 'address':
-                if (!value.trim()) {
-                  this.validationErrors[fieldName] = 'Address is required';
-                } else if (value.length < 5) {
-                  this.validationErrors[fieldName] = 'Address must be at least 5 characters';
-                }
-                break;
-                
-              case 'city':
-                if (!value.trim()) {
-                  this.validationErrors[fieldName] = 'City is required';
-                } else if (value.length < 2) {
-                  this.validationErrors[fieldName] = 'City must be at least 2 characters';
-                } else if (!/^[A-Za-z\s\-\']+$/.test(value)) {
-                  this.validationErrors[fieldName] = 'City can only contain letters, spaces, hyphens, and apostrophes';
-                }
-                break;
-                
-              case 'country':
-                if (!value) {
-                  this.validationErrors[fieldName] = 'Please select a country';
-                }
-                break;
-                
-              case 'recipientName':
-                if (form.isGift) {
-                  if (!value.trim()) {
-                    this.validationErrors[fieldName] = 'Recipient name is required for gifts';
-                  } else if (value.length < 2) {
-                    this.validationErrors[fieldName] = 'Recipient name must be at least 2 characters';
-                  } else if (!/^[A-Za-z\s\-\']+$/.test(value)) {
-                    this.validationErrors[fieldName] = 'Name can only contain letters, spaces, hyphens, and apostrophes';
-                  }
-                }
-                break;
-                
-              case 'deliveryOption':
-                if (!value) {
-                  this.validationErrors[fieldName] = 'Please select a delivery option';
-                }
-                break;
-            }
-          },
-          goToLessons() {
-            this.currentPage = "lessons";
-          },
-          goToCart() {
-            this.currentPage = "checkout";
-          },
-          getCartTotal() {
-            return this.cart
-              .reduce((total, item) => total + item.price * item.quantity, 0)
-              .toFixed(2);
-          },
-          processCheckout() {
-            this.validateField('firstName');
-            this.validateField('lastName');
-            this.validateField('email');
-            this.validateField('phone');
-            this.validateField('address');
-            this.validateField('city');
-            this.validateField('country');
-            this.validateField('deliveryOption');
-            
-            if (this.checkoutForm.isGift) {
-              this.validateField('recipientName');
-            }
-            
-            if (!this.isFormValid) {
-              alert('Please correct the errors in the form before proceeding.');
-              return;
-            }
-            
-            alert('Order processed successfully! Thank you for your purchase.');
-            console.log("Checkout form data:", this.checkoutForm);
-            console.log("Cart contents:", this.cart);
-          },
-          getTotalCartItems() {
-            return this.cart.reduce((total, item) => total + item.quantity, 0);
+          toggleSortOrder() { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; },
+          goToLessons() { this.currentPage = 'lessons'; },
+          goToCart() { this.currentPage = 'checkout'; },
+          getTotalCartItems() { return this.cart.reduce((s, i) => s + i.quantity, 0); },
+          getCartTotal() { return this.cart.reduce((t, it) => t + (it.price || 0) * (it.quantity || 0), 0).toFixed(2); },
+          async fetchLessons() {
+            try {
+              const res = await fetch(`${API_BASE}/lessons`);
+              if (!res.ok) throw new Error('Failed to fetch');
+              this.lessons = await res.json();
+            } catch (e) { console.error(e); }
           },
           getAvailableSpaces(lesson) {
-            const cartItem = this.cart.find((item) => item.id === lesson.id);
-            const quantityInCart = cartItem ? cartItem.quantity : 0;
-            return Math.max(0, lesson.spaces - quantityInCart);
+            const cartItem = this.cart.find(it => String(it.id) === String(lesson.id || lesson._id));
+            const inCart = cartItem ? cartItem.quantity : 0;
+            return Math.max(0, (Number(lesson.spaces) || 0) - inCart);
           },
-          addToCart(lesson) {
-            if (this.getAvailableSpaces(lesson) === 0) {
-              return;
+          async updateSpacesOnServer(lessonId, newSpaces) {
+            const res = await fetch(`${API_BASE}/lessons/${lessonId}/spaces`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spaces: newSpaces }) });
+            if (!res.ok) throw new Error('Failed to update spaces');
+            const updated = await res.json();
+            const idx = this.lessons.findIndex(l => String(l._id) === String(updated._id) || String(l.id) === String(updated.id));
+            if (idx >= 0) this.$set(this.lessons, idx, updated);
+            return updated;
+          },
+          async addToCart(lesson) {
+            if (this.getAvailableSpaces(lesson) === 0) return;
+            try {
+              const newSpaces = Number(lesson.spaces) - 1;
+              const updated = await this.updateSpacesOnServer(lesson._id || lesson.id, newSpaces);
+              const existing = this.cart.find(i => String(i.id) === String(updated.id || updated._id || lesson.id || lesson._id));
+              if (existing) existing.quantity += 1;
+              else this.cart.push({ id: updated.id || updated._id || lesson.id || lesson._id, subject: updated.subject || lesson.subject, price: updated.price || lesson.price, quantity: 1 });
+            } catch (e) { console.error(e); alert('Failed to add to cart'); }
+          },
+          async removeFromCart(lessonId) {
+            const item = this.cart.find(i => String(i.id) === String(lessonId));
+            if (!item) return;
+            try {
+              const lesson = this.lessons.find(l => String(l._id) === String(lessonId) || String(l.id) === String(lessonId));
+              if (lesson) await this.updateSpacesOnServer(lesson._id || lesson.id, Number(lesson.spaces) + item.quantity);
+              this.cart = this.cart.filter(i => String(i.id) !== String(lessonId));
+            } catch (e) { console.error(e); alert('Failed to remove from cart'); }
+          },
+          async decreaseQuantity(lessonId) {
+            const item = this.cart.find(i => String(i.id) === String(lessonId));
+            if (!item) return;
+            if (item.quantity > 1) {
+              try {
+                item.quantity -= 1;
+                const lesson = this.lessons.find(l => String(l._id) === String(lessonId) || String(l.id) === String(lessonId));
+                if (lesson) await this.updateSpacesOnServer(lesson._id || lesson.id, Number(lesson.spaces) + 1);
+              } catch (e) { console.error(e); alert('Failed to update quantity'); }
             }
-
-            const existingItem = this.cart.find(
-              (item) => item.id === lesson.id
-            );
-
-            if (existingItem) {
-              existingItem.quantity += 1;
-            } else {
-              this.cart.push({
-                ...lesson,
-                quantity: 1,
-              });
+          },
+          async increaseQuantityByItem(item) {
+            const lesson = this.lessons.find(l => String(l._id) === String(item.id) || String(l.id) === String(item.id));
+            if (!lesson || this.getAvailableSpaces(lesson) <= 0) return;
+            try {
+              item.quantity += 1;
+              await this.updateSpacesOnServer(lesson._id || lesson.id, Number(lesson.spaces) - 1);
+            } catch (e) { console.error(e); alert('Failed to update quantity'); }
+          },
+          validateField(fieldName) {
+            const form = this.checkoutForm; const val = form[fieldName] || '';
+            this.$set(this.validationErrors, fieldName, '');
+            switch (fieldName) {
+              case 'firstName': case 'lastName': if (!val.trim()) this.validationErrors[fieldName] = 'Required'; break;
+              case 'email': if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) this.validationErrors[fieldName] = 'Invalid email'; break;
+              case 'phone': if (!/^[\+]?[0-9\s\-\(\)]{10,15}$/.test(val.replace(/\s/g, ''))) this.validationErrors[fieldName] = 'Invalid phone'; break;
+              case 'address': if (!val.trim()) this.validationErrors[fieldName] = 'Required'; break;
+              case 'city': if (!val.trim()) this.validationErrors[fieldName] = 'Required'; break;
+              case 'country': if (!val) this.validationErrors[fieldName] = 'Select country'; break;
+              case 'recipientName': if (form.isGift && !val.trim()) this.validationErrors[fieldName] = 'Required for gifts'; break;
+              case 'deliveryOption': if (!val) this.validationErrors[fieldName] = 'Select delivery option'; break;
             }
-
-            console.log("Cart updated:", this.cart);
           },
-          removeFromCart(lessonId) {
-            this.cart = this.cart.filter((item) => item.id !== lessonId);
-            console.log("Item removed from cart:", this.cart);
-          },
-          decreaseQuantity(lessonId) {
-            const item = this.cart.find((item) => item.id === lessonId);
-            if (item && item.quantity > 1) {
-              item.quantity -= 1;
-            }
-            console.log("Cart updated:", this.cart);
-          },
-          increaseQuantity(lesson) {
-            if (this.getAvailableSpaces(lesson) > 0) {
-              const item = this.cart.find((item) => item.id === lesson.id);
-              if (item) {
-                item.quantity += 1;
-              }
-            }
-            console.log("Cart updated:", this.cart);
-          },
-        },
+          async processCheckout() {
+            ['firstName','lastName','email','phone','address','city','country','deliveryOption'].forEach(f => this.validateField(f));
+            if (this.checkoutForm.isGift) this.validateField('recipientName');
+            if (!this.isFormValid) { alert('Please fix form errors'); return; }
+            try {
+              const payload = { checkoutForm: this.checkoutForm, cart: this.cart };
+              const res = await fetch(`${API_BASE}/orders`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+              if (!res.ok) { const err = await res.json().catch(()=>null); console.error(err); alert('Order failed'); return; }
+              await res.json();
+              alert('Order placed');
+              this.cart = [];
+              this.checkoutForm = { firstName:'', lastName:'', email:'', phone:'', address:'', city:'', country:'', isGift:false, recipientName:'', deliveryOption:'' };
+              await this.fetchLessons();
+              this.goToLessons();
+            } catch (e) { console.error(e); alert('Failed to place order'); }
+          }
+        }
       });
     </script>
   </body>

@@ -22,7 +22,7 @@
 
       <main v-if="currentPage === 'lessons'">
         <div class="controls">
-          <input v-model="searchQuery" placeholder="Search lessons..." />
+          <input v-model="searchQuery" @input="onSearchInput" placeholder="Search lessons..." />
           <select v-model="sortBy">
             <option value="">Sort by</option>
             <option value="subject">Subject</option>
@@ -146,8 +146,6 @@
     </div>
 
     <script>
-      // If the page is opened via file://, relative paths like '/lessons' resolve to file:///
-      // so use the full backend origin. Adjust if your backend runs on a different host/port.
       const API_BASE = (location.protocol === 'file:') ? 'http://localhost:3000' : '';
 
       new Vue({
@@ -170,10 +168,6 @@
         computed: {
           filteredAndSortedLessons() {
             let filtered = this.lessons.slice();
-            if (this.searchQuery) {
-              const q = this.searchQuery.toLowerCase();
-              filtered = filtered.filter(l => (l.subject || '').toLowerCase().includes(q) || (l.location || '').toLowerCase().includes(q));
-            }
             if (this.sortBy) {
               filtered.sort((a, b) => {
                 let va = this.sortBy === 'spaces' ? this.getAvailableSpaces(a) : (a[this.sortBy] || '').toString().toLowerCase();
@@ -199,14 +193,18 @@
           this.fetchLessons();
         },
         methods: {
+          onSearchInput() {
+            this.fetchLessons(this.searchQuery);
+          },
           toggleSortOrder() { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; },
           goToLessons() { this.currentPage = 'lessons'; },
           goToCart() { this.currentPage = 'checkout'; },
           getTotalCartItems() { return this.cart.reduce((s, i) => s + i.quantity, 0); },
           getCartTotal() { return this.cart.reduce((t, it) => t + (it.price || 0) * (it.quantity || 0), 0).toFixed(2); },
-          async fetchLessons() {
+          async fetchLessons(searchTerm = '') {
             try {
-              const res = await fetch(`${API_BASE}/lessons`);
+              const url = searchTerm ? `${API_BASE}/lessons?search=${encodeURIComponent(searchTerm)}` : `${API_BASE}/lessons`;
+              const res = await fetch(url);
               if (!res.ok) throw new Error('Failed to fetch');
               this.lessons = await res.json();
             } catch (e) { console.error(e); }

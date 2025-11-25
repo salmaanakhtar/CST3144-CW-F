@@ -34,8 +34,10 @@
 
         <div class="lessons-container">
           <div v-for="lesson in filteredAndSortedLessons" :key="lesson._id || lesson.id" class="lesson-card">
-            <img v-if="lesson.image" :src="`${API_BASE}/images/${lesson.image}`" alt="Lesson image" class="lesson-image" />
-            <h3 class="lesson-subject">{{ lesson.subject }}</h3>
+            <div class="lesson-header">
+              <img v-if="lesson.image" :src="`${apiBase}/images/${lesson.image}`" alt="Lesson image" class="lesson-image" />
+              <h3 class="lesson-subject">{{ lesson.subject }}</h3>
+            </div>
             <div class="lesson-details">
               <p><strong>Location:</strong> {{ lesson.location }}</p>
               <p><strong>Price:</strong> £{{ lesson.price }}</p>
@@ -147,12 +149,11 @@
     </div>
 
     <script>
-      const API_BASE = (location.protocol === 'file:') ? 'http://localhost:3000' : '';
-
       new Vue({
         el: '#app',
         data() {
           return {
+            API_BASE: (location.protocol === 'file:') ? 'http://localhost:3000' : '',
             appName: 'Learning App',
             currentPage: 'lessons',
             lessons: [],
@@ -167,6 +168,9 @@
           };
         },
         computed: {
+          apiBase() {
+            return this.API_BASE || 'http://localhost:3000';
+          },
           filteredAndSortedLessons() {
             let filtered = this.lessons.slice();
             if (this.sortBy) {
@@ -204,7 +208,7 @@
           getCartTotal() { return this.cart.reduce((t, it) => t + (it.price || 0) * (it.quantity || 0), 0).toFixed(2); },
           async fetchLessons(searchTerm = '') {
             try {
-              const url = searchTerm ? `${API_BASE}/lessons?search=${encodeURIComponent(searchTerm)}` : `${API_BASE}/lessons`;
+              const url = searchTerm ? `${this.apiBase}/lessons?search=${encodeURIComponent(searchTerm)}` : `${this.apiBase}/lessons`;
               const res = await fetch(url);
               if (!res.ok) throw new Error('Failed to fetch');
               this.lessons = await res.json();
@@ -216,7 +220,7 @@
             return Math.max(0, (Number(lesson.spaces) || 0) - inCart);
           },
           async updateSpacesOnServer(lessonId, newSpaces) {
-            const res = await fetch(`${API_BASE}/lessons/${lessonId}/spaces`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spaces: newSpaces }) });
+            const res = await fetch(`${this.apiBase}/lessons/${lessonId}/spaces`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spaces: newSpaces }) });
             if (!res.ok) throw new Error('Failed to update spaces');
             const updated = await res.json();
             const idx = this.lessons.findIndex(l => String(l._id) === String(updated._id) || String(l.id) === String(updated.id));
@@ -281,7 +285,7 @@
             if (!this.isFormValid) { alert('Please fix form errors'); return; }
             try {
               const payload = { checkoutForm: this.checkoutForm, cart: this.cart };
-              const res = await fetch(`${API_BASE}/orders`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+              const res = await fetch(`${this.apiBase}/orders`, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
               if (!res.ok) { const err = await res.json().catch(()=>null); console.error(err); alert('Order failed'); return; }
               await res.json();
               alert('Order placed');

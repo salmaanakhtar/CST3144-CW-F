@@ -34,6 +34,7 @@
 
         <div class="lessons-container">
           <div v-for="lesson in filteredAndSortedLessons" :key="lesson._id || lesson.id" class="lesson-card">
+            <img v-if="lesson.image" :src="`${API_BASE}/images/${lesson.image}`" alt="Lesson image" class="lesson-image" />
             <h3 class="lesson-subject">{{ lesson.subject }}</h3>
             <div class="lesson-details">
               <p><strong>Location:</strong> {{ lesson.location }}</p>

@@ -16,7 +16,7 @@
         </div>
         <div class="nav-buttons">
           <button class="nav-btn lessons-btn" @click="goToLessons">Lessons</button>
-          <button class="nav-btn cart-btn" @click="goToCart">Checkout ({{ getTotalCartItems() }})</button>
+          <button class="nav-btn cart-btn" @click="goToCart" :disabled="cart.length === 0">Checkout ({{ getTotalCartItems() }})</button>
         </div>
       </header>
 

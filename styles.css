@@ -59,6 +59,12 @@ input {
   transition: background-color 0.3s ease;
 }
 
+.nav-btn:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
 .lessons-btn {
   background-color: #28a745;
   color: white;
